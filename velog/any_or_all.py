@@ -1,3 +1,16 @@
+from enum import Enum
+
+
+class TestEnum(Enum):
+    test1 = 1
+    test2 = 2
+    test3 = 3
+
+    @classmethod
+    def has_value(cls, value):
+        return any(value == test.value for test in TestEnum)
+
+
 def any_or_all(p_list, value, type):
     if type == "any":
         if any(value == i for i in p_list):
@@ -26,3 +39,6 @@ any_or_all(temp_list, value, "all")
 temp_list = [5, 5, 5, 5, 6]
 value = 5
 any_or_all(temp_list, value, "all")
+
+print(TestEnum.has_value(2))
+print(TestEnum.has_value(4))
