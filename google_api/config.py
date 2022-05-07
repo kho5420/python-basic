@@ -1,0 +1,2 @@
+calendar_id="htg0d7ocl64phse14a0uoqg190%40group.calendar.google.com"
+google_api_key="AIzaSyDFZbMHnhehmB58Iy3E4G23tHbo_syxaow"
