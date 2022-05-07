@@ -29,7 +29,7 @@ def get_vacationer_list():
 
     return vacationer_list
 
-def change_reviewer(vacationer_list):
+def convert_reviewer(vacationer_list):
     status_list = ["연차", "오후반차", "오전반차", "오전반반차", "오후반반차"]
 
     for i, vacationer in enumerate(vacationer_list):
@@ -42,7 +42,7 @@ def change_reviewer(vacationer_list):
 
 
 vacationer_list = get_vacationer_list()
-reviewer_list = change_reviewer(vacationer_list)
+reviewer_list = convert_reviewer(vacationer_list)
 
 project_list = ["1", "2", "3"]
 all_name_list = ["리뷰어1", "리뷰어2", "리뷰어3", "리뷰어4", "리뷰어5", "리뷰어6", "리뷰어7"]
