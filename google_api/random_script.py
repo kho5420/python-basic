@@ -1,20 +1,48 @@
 #!/usr/bin/python36
 # -*- coding: utf-8 -*-
+import itertools
 import sys
 import random
 import requests
-
+import datetime
 import config
 
 
-def get_google_calendar_list():
-    url = f"https://www.googleapis.com/calendar/v3/calendars/{config.calendar_id}/events?key={config.google_api_key}"
+def get_vacationer_list():
+    url = f"https://www.googleapis.com/calendar/v3/calendars/{config.calendar_id}/events"
 
-    params = {'param1': 'value1', 'param2': 'value'}
-    res = requests.get(URL, params=params)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    now2 = now + datetime.timedelta(hours=1)
 
-    출처: https: // dgkim5360.tistory.com / entry / python - requests[개발새발로그]
+    time_min = now.isoformat()
+    time_max = now2.isoformat()
 
+    params = {"key": config.google_api_key, "timeMax": time_max, "timeMin": time_min}
+    response = requests.get(url, params=params, headers={"Authorization": f"Bearer {config.token}"})
+
+    response = response.json()
+
+    vacationer_list = []
+    if response.get("items"):
+        for item in response["items"]:
+            vacationer_list.append(item.get("summary"))
+
+    return vacationer_list
+
+def change_reviewer(vacationer_list):
+    status_list = ["연차", "오후반차", "오전반차", "오전반반차", "오후반반차"]
+
+    for i, vacationer in enumerate(vacationer_list):
+        for vacation in status_list:
+            if vacationer.find(vacation) != -1:
+                vacationer_list[i] = vacationer.replace(f" {vacation}", "").split(",")
+
+    reviewer_list = list(itertools.chain(*vacationer_list))
+    return [review.strip() for review in reviewer_list]
+
+
+vacationer_list = get_vacationer_list()
+reviewer_list = change_reviewer(vacationer_list)
 
 project_list = ["1", "2", "3"]
 all_name_list = ["리뷰어1", "리뷰어2", "리뷰어3", "리뷰어4", "리뷰어5", "리뷰어6", "리뷰어7"]
@@ -48,6 +76,8 @@ elif input_project == "2":
 else:
     first_approve_list = ["리뷰어1", "리뷰어3"]
 
+all_name_list = list(set(all_name_list) - set(reviewer_list))
+first_approve_list = list(set(first_approve_list) - set(reviewer_list))
 second_approve_list = list(set(all_name_list) - set(first_approve_list))
 
 try:
@@ -60,5 +90,16 @@ try:
 except ValueError:
     pass
 
-print("첫번째 승인자 : {}".format(random.choice(first_approve_list)))
-print("두번째 승인자 : {}".format(random.choice(second_approve_list)))
+first_reviewer = None
+second_reviewer = None
+
+if first_approve_list:
+    first_reviewer = random.choice(first_approve_list)
+    second_reviewer = random.choice(second_approve_list)
+else:
+    first_reviewer = random.choice(second_approve_list)
+    second_approve_list.remove(first_reviewer)
+    second_reviewer = random.choice(second_approve_list)
+
+print(f"첫번째 승인자 : {first_reviewer}")
+print(f"두번째 승인자 : {second_reviewer}")
