@@ -14,7 +14,7 @@ from googleapiclient.errors import HttpError
 
 class GoogleCalendar:
     def __init__(self):
-        self.SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+        self.SCOPES = ['https://www.googleapis.com/auth/calendar']
         self.file_path = "google_api/token.json"
 
     def renew_google_token(self):
@@ -39,28 +39,31 @@ class GoogleCalendar:
             with open(self.file_path, 'w') as token:
                 token.write(creds.to_json())
 
-        try:
-            service = build('calendar', 'v3', credentials=creds)
+        return creds
 
-            # Call the Calendar API
-            now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-            print('Getting the upcoming 10 events')
-            events_result = service.events().list(calendarId='primary', timeMin=now,
-                                                  maxResults=10, singleEvents=True,
-                                                  orderBy='startTime').execute()
-            events = events_result.get('items', [])
-
-            if not events:
-                print('No upcoming events found.')
-                return
-
-            # Prints the start and name of the next 10 events
-            for event in events:
-                start = event['start'].get('dateTime', event['start'].get('date'))
-                print(start, event['summary'])
-
-        except HttpError as error:
-            print('An error occurred: %s' % error)
+        # 공식 샘플 테스크 코드
+        # try:
+        #     service = build('calendar', 'v3', credentials=creds)
+        #
+        #     # Call the Calendar API
+        #     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+        #     print('Getting the upcoming 10 events')
+        #     events_result = service.events().list(calendarId='primary', timeMin=now,
+        #                                           maxResults=10, singleEvents=True,
+        #                                           orderBy='startTime').execute()
+        #     events = events_result.get('items', [])
+        #
+        #     if not events:
+        #         print('No upcoming events found.')
+        #         return
+        #
+        #     # Prints the start and name of the next 10 events
+        #     for event in events:
+        #         start = event['start'].get('dateTime', event['start'].get('date'))
+        #         print(start, event['summary'])
+        #
+        # except HttpError as error:
+        #     print('An error occurred: %s' % error)
 
     def get_google_token(self):
         self.renew_google_token()
@@ -83,5 +86,13 @@ class GoogleCalendar:
         response = requests.get(url, params=params, headers={"Authorization": f"Bearer {self.get_google_token()}"})
 
         return response.json()
+
+    def set_google_calendar(self, event):
+        creds = self.renew_google_token()
+        service = build('calendar', 'v3', credentials=creds)
+
+        # calendarId : 캘린더 ID. primary이 기본 값
+        service.events().insert(calendarId=config.calendar_id, body=event).execute()
+
 
 google_calendar = GoogleCalendar
