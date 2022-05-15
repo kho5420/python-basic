@@ -3,24 +3,13 @@
 import itertools
 import sys
 import random
-import requests
-import datetime
-import config
 
+from google_token import GoogleCalendar
+
+google_calendar = GoogleCalendar()
 
 def get_vacationer_list():
-    url = f"https://www.googleapis.com/calendar/v3/calendars/{config.calendar_id}/events"
-
-    now = datetime.datetime.now(datetime.timezone.utc)
-    now2 = now + datetime.timedelta(hours=1)
-
-    time_min = now.isoformat()
-    time_max = now2.isoformat()
-
-    params = {"key": config.google_api_key, "timeMax": time_max, "timeMin": time_min}
-    response = requests.get(url, params=params, headers={"Authorization": f"Bearer {config.token}"})
-
-    response = response.json()
+    response = google_calendar.get_today_google_calendar()
 
     vacationer_list = []
     if response.get("items"):
