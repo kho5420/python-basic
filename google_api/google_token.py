@@ -87,12 +87,34 @@ class GoogleCalendar:
 
         return response.json()
 
+    def get_total_google_calendar(self):
+        creds = self.renew_google_token()
+        service = build('calendar', 'v3', credentials=creds)
+        page_token = None
+        event_list = []
+
+        while True:
+            events = service.events().list(calendarId=config.calendar_id, pageToken=page_token).execute()
+            for event in events['items']:
+                event_list.append(event)
+            page_token = events.get('nextPageToken')
+            if not page_token:
+                break
+
+        return event_list
+
     def set_google_calendar(self, event):
         creds = self.renew_google_token()
         service = build('calendar', 'v3', credentials=creds)
 
         # calendarId : 캘린더 ID. primary이 기본 값
         service.events().insert(calendarId=config.calendar_id, body=event).execute()
+
+    def delete_google_calendar(self, event_id):
+        creds = self.renew_google_token()
+        service = build('calendar', 'v3', credentials=creds)
+
+        service.events().delete(calendarId=config.calendar_id, eventId=event_id).execute()
 
 
 google_calendar = GoogleCalendar
