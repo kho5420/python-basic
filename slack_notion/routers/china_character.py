@@ -18,6 +18,32 @@ router = APIRouter(
 )
 slack_client = SlackAPI(config.slack_bot_token)
 
+
+@router.post("/")
+async def select_menu():
+    elements_list = [
+        {
+            "text": "menu1",
+            "value": "menu1",
+            # "url": "https://www.naver.com"
+        },
+        {
+            "text": "menu2",
+            "value": "menu2",
+            # "url": "https://www.google.com",
+        }
+    ]
+
+    slack_client.post_message(
+        channel_id=url.channel_id,
+        text="select_menu",
+        blocks=slack_client.action_buttons(
+            elements=elements_list
+        )
+    )
+    return
+
+
 @router.post("/myname")
 async def input_myname():
     slack_client.post_message(
@@ -35,9 +61,29 @@ async def input_myname():
 async def post_message(request: Request, db: Session = Depends(get_db)):
     form_data = await request.form()
     payload = json.loads(form_data.get("payload"))
+    message = "message"
+    actions = payload["actions"][0]
 
-    myname = payload["actions"][0]["value"]
-    name_list = [myname[i:i+1] for i in range(len(myname))]
+    if payload:
+        if actions["type"] == "plain_text_input":
+            message = await interactive_myname(myname=payload["actions"][0]["value"], db=db)
+        if actions["type"] == "button":
+            if actions["value"] == "menu1":
+                await input_myname()
+                return
+            elif actions["value"] == "menu2":
+                message = "menu2"
+
+    slack_client.post_message(
+        channel_id=url.channel_id,
+        text=message,
+    )
+
+    return
+
+
+async def interactive_myname(myname: str, db: Session) -> str:
+    name_list = [myname[i:i + 1] for i in range(len(myname))]
 
     result = await get_china_character_name(name_list, db)
 
@@ -50,9 +96,4 @@ async def post_message(request: Request, db: Session = Depends(get_db)):
 
         message = f"당신의 이름 중 불용한자는 총 {len(result)}개 입니다...\n{name_text}\n\n부모님이 주신 소중한 이름, 재미로만 봐주세요 🥹"
 
-    slack_client.post_message(
-        channel_id=url.channel_id,
-        text=message,
-    )
-
-    return
+    return message

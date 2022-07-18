@@ -5,6 +5,28 @@ class SlackAPI:
     def __init__(self, token):
         self.client = WebClient(token)
 
+    def action_buttons(self, elements: list):
+        blocks = [{
+            "type": "actions",
+            "elements": []
+        }]
+
+        for row in elements:
+            blocks[0]["elements"].append(
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": row["text"],
+                        "emoji": True
+                    },
+                    "value": row["value"],
+                    # "url": row["url"]
+                }
+            )
+
+        return blocks
+
     def plain_text_input(self, label_text: str, place_holder: str = ""):
         blocks = [
             {
@@ -27,7 +49,7 @@ class SlackAPI:
         ]
         return blocks
 
-    def post_message(self, channel_id: str, text: str = None, blocks = None):
+    def post_message(self, channel_id: str, text: str = None, blocks=None):
         result = self.client.chat_postMessage(
             channel=channel_id,
             text=text,
