@@ -57,22 +57,40 @@ async def input_myname():
     return
 
 
+async def input_birthdate():
+    slack_client.post_message(
+        channel_id=url.channel_id,
+        text="토정비결",
+        blocks=slack_client.plain_text_input(
+            label_text="당신의 음력 생년월일을 6자리로 입력해 주세요.",
+            place_holder="ex) 220808"
+        )
+    )
+    return
+
+
 @router.post("/interactive")
 async def post_message(request: Request, db: Session = Depends(get_db)):
     form_data = await request.form()
     payload = json.loads(form_data.get("payload"))
     message = "message"
     actions = payload["actions"][0]
+    plain_text = payload["message"]["text"]
+    text_input_value = payload["actions"][0]["value"]
 
     if payload:
         if actions["type"] == "plain_text_input":
-            message = await interactive_myname(myname=payload["actions"][0]["value"], db=db)
-        if actions["type"] == "button":
+            if plain_text == "나의이름은":
+                message = await interactive_myname(myname=text_input_value, db=db)
+            elif plain_text == "토정비결":
+                message = await tojeong_secret_book(birthdate=text_input_value)
+        elif actions["type"] == "button":
             if actions["value"] == "menu1":
                 await input_myname()
                 return
             elif actions["value"] == "menu2":
-                message = "menu2"
+                await input_birthdate()
+                return
 
     slack_client.post_message(
         channel_id=url.channel_id,
@@ -95,5 +113,28 @@ async def interactive_myname(myname: str, db: Session) -> str:
             name_text = f"{name_text}불용한자는 [{name.cha_name},{name.kor_name}]이며, 이 한자는 {name.description}\n"
 
         message = f"당신의 이름 중 불용한자는 총 {len(result)}개 입니다...\n{name_text}\n\n부모님이 주신 소중한 이름, 재미로만 봐주세요 🥹"
+
+    return message
+
+
+async def tojeong_secret_book(birthdate: str):
+    if not birthdate:
+        message = "생년월일을 입력해 주시기 바랍니다."
+        return message
+
+    if len(birthdate) != 6:
+        message = "생년월일 6자리를 맞춰서 입력해 주시기 바랍니다."
+        return message
+
+    # 임인년 육십갑자 세팅
+    rule1 = 16  # 태세수
+    rule2 = 13  # 월건수
+    rule3 = 14  # 일진수
+
+    year = birthdate[0:2]
+    month = birthdate[2:4]
+    day = birthdate[4:6]
+
+    message = f"{year}/{month}/{day}"
 
     return message
