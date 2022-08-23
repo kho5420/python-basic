@@ -49,6 +49,23 @@ class SlackAPI:
         ]
         return blocks
 
+    def radio_buttons(self, title: str, options: list[dict]):
+        blocks = [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": title
+                },
+                "accessory": {
+                    "type": "radio_buttons",
+                    "options": options,
+                    "action_id": "radio_buttons-action"
+                }
+            }
+        ]
+        return blocks
+
     def post_message(self, channel_id: str, text: str = None, blocks=None):
         result = self.client.chat_postMessage(
             channel=channel_id,

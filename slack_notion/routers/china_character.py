@@ -3,6 +3,7 @@ import json
 
 from fastapi import Request, Depends, APIRouter
 from sqlalchemy.orm import Session
+from korean_lunar_calendar import KoreanLunarCalendar
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 from db.connection import get_db
@@ -48,7 +49,7 @@ async def select_menu():
 async def input_myname():
     slack_client.post_message(
         channel_id=url.channel_id,
-        text="나의이름은",
+        text="myname",
         blocks=slack_client.plain_text_input(
             label_text="당신의 이름을 '한자'로 입력해 주세요.",
             place_holder="ex) 炯旭 (성을 제외한 이름만 입력해주세요.)"
@@ -57,16 +58,47 @@ async def input_myname():
     return
 
 
-async def input_birthdate():
+async def input_birthdate(birth_type: str):
     slack_client.post_message(
         channel_id=url.channel_id,
-        text="토정비결",
+        text=birth_type,
         blocks=slack_client.plain_text_input(
-            label_text="당신의 음력 생년월일을 6자리로 입력해 주세요.",
+            label_text="당신의 생년월일을 6자리로 입력해 주세요.(음력/양력)",
             place_holder="ex) 220808"
         )
     )
     return
+
+
+async def select_birthdate_type():
+    options = [
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "양력",
+                "emoji": True
+            },
+            "value": "solar"
+        },
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "음력",
+                "emoji": True
+            },
+            "value": "lunar"
+        }
+    ]
+
+    response = slack_client.post_message(
+        channel_id=url.channel_id,
+        text="solar_lunar_birthdate",
+        blocks=slack_client.radio_buttons(
+            title="입력한 생년월일이 양력인지 음력인지 선택해 주세요.",
+            options=options
+        )
+    )
+    return response
 
 
 @router.post("/interactive")
@@ -76,20 +108,26 @@ async def post_message(request: Request, db: Session = Depends(get_db)):
     message = "message"
     actions = payload["actions"][0]
     plain_text = payload["message"]["text"]
-    text_input_value = payload["actions"][0]["value"]
 
     if payload:
         if actions["type"] == "plain_text_input":
-            if plain_text == "나의이름은":
+            text_input_value = payload["actions"][0]["value"]
+
+            if plain_text == "myname":
                 message = await interactive_myname(myname=text_input_value, db=db)
-            elif plain_text == "토정비결":
-                message = await tojeong_secret_book(birthdate=text_input_value)
+            elif plain_text in ["solar", "lunar"]:
+                message = await tojeong_secret_book(birthdate=text_input_value, birth_type=plain_text)
+
+        elif actions["type"] == "radio_buttons":
+            await input_birthdate(actions["selected_option"]["value"])
+            return
+
         elif actions["type"] == "button":
             if actions["value"] == "menu1":
                 await input_myname()
                 return
             elif actions["value"] == "menu2":
-                await input_birthdate()
+                await select_birthdate_type()
                 return
 
     slack_client.post_message(
@@ -117,7 +155,7 @@ async def interactive_myname(myname: str, db: Session) -> str:
     return message
 
 
-async def tojeong_secret_book(birthdate: str):
+async def tojeong_secret_book(birthdate: str, birth_type: str):
     if not birthdate:
         message = "생년월일을 입력해 주시기 바랍니다."
         return message
@@ -137,4 +175,4 @@ async def tojeong_secret_book(birthdate: str):
 
     message = f"{year}/{month}/{day}"
 
-    return message
+    return birth_type
