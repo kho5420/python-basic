@@ -7,3 +7,11 @@ class ChinaCharacterInfo(BaseModel):
     kor_name: str = Field(...)
     description: str = Field(...)
     call_name: str = Field(...)
+
+
+class SixtyCycleInfo(BaseModel):
+    kor_name: str
+    chn_name: str
+    year: int
+    month: int
+    day: int
