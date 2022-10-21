@@ -1,7 +1,7 @@
 import sys
 
 from fastapi import FastAPI
-from routers import china_character, notion
+from slack_notion.routers import china_character, notion
 
 sys.path.append('/Users/hyungukkim/Desktop/Developments/test-folder/python-basic')
 

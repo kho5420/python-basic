@@ -15,3 +15,10 @@ class SixtyCycleInfo(BaseModel):
     year: int
     month: int
     day: int
+
+
+class DivinationInfo(BaseModel):
+    number: int
+    name: str
+    type: str
+    url: str

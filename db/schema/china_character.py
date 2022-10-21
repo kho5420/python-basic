@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy.orm import relationship
 from db.session import Base
 
 
@@ -21,3 +22,21 @@ class SixtyCycle(Base):
     YEAR = Column(Integer, nullable=False)
     MONTH = Column(Integer, nullable=False)
     DAY = Column(Integer, nullable=False)
+
+
+class DivinationType(Base):
+    __tablename__ = "TB_DIVINATION_TYPE"
+
+    ID = Column(Integer, primary_key=True, index=True)
+    NAME = Column(String, nullable=False)
+    divination = relationship("Divination", backref="type")
+
+
+class Divination(Base):
+    __tablename__ = "TB_DIVINATION"
+
+    ID = Column(Integer, primary_key=True, index=True)
+    NUMBER = Column(Integer, nullable=False)
+    NAME = Column(String, nullable=False)
+    TYPE = Column(Integer, ForeignKey('TB_DIVINATION_TYPE.ID'))
+    URL = Column(String, nullable=False)

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
-from db.models.china_character import ChinaCharacterInfo, SixtyCycleInfo
-from db.schema.china_character import ChinaCharacter, SixtyCycle
+from db.models.china_character import ChinaCharacterInfo, SixtyCycleInfo, DivinationInfo
+from db.schema.china_character import ChinaCharacter, SixtyCycle, Divination, DivinationType
 
 
 async def get_china_character_name(
@@ -37,4 +37,19 @@ async def get_sixty_cycle(
             day=row.DAY,
         ) for row in query
     ]
+    return result
+
+
+async def get_divination(
+    divination_num: int,
+    db: Session
+):
+    query = db.query(Divination, DivinationType).filter(Divination.NUMBER == divination_num).join(DivinationType, Divination.TYPE == DivinationType.ID).first()
+    result = DivinationInfo(
+        number=query.Divination.NUMBER,
+        name=query.Divination.NAME,
+        type=query.DivinationType.NAME,
+        url=query.Divination.URL,
+    )
+
     return result

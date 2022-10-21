@@ -8,7 +8,7 @@ from korean_lunar_calendar import KoreanLunarCalendar
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))))
 from db.connection import get_db
-from db.repositories.china_character import get_china_character_name, get_sixty_cycle
+from db.repositories.china_character import get_china_character_name, get_sixty_cycle, get_divination
 from slack_notion import url
 from slack_notion import config
 from slack_notion.util import validate_date_format
@@ -217,4 +217,6 @@ async def tojeong_secret_book(birthdate: str, birth_type: str, db: Session):
     if divination3 == 0:
         divination3 = 3
 
-    return f"{divination1}/{divination2}/{divination3}"
+    result = await get_divination(int(f"{divination1}{divination2}{divination3}"), db)
+
+    return f"*<{result.url}|{result.number} {result.name}>*\n{result.type}"
