@@ -26,12 +26,12 @@ slack_client = SlackAPI(config.slack_bot_token)
 async def select_menu():
     elements_list = [
         {
-            "text": "menu1",
+            "text": "불용한자",
             "value": "menu1",
             # "url": "https://www.naver.com"
         },
         {
-            "text": "menu2",
+            "text": "토정비결",
             "value": "menu2",
             # "url": "https://www.google.com",
         }
